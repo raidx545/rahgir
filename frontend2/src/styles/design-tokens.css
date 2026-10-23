@@ -1,0 +1,244 @@
+/* ==========================================================================
+   Rahgir · राहगीर — Design Tokens
+   Art direction: "मील का पत्थर / Milestone" — the NH kilometre stone.
+   --------------------------------------------------------------------------
+   THREE LAYERS. Consume ONLY the semantic + component layers in components.
+     1. PRIMITIVE  — raw OKLCH ramps. The only layer allowed to hold raw color.
+     2. SEMANTIC   — role-based meaning (background, route, marker…).
+     3. COMPONENT  — per-component knobs derived from semantic.
+
+   Colour system verified against WCAG 2.1 AA (see contrast notes inline).
+   ⚠ HARD RULE — the milestone band rule:
+     `--p-nh-yellow-500` on limestone is 1.69:1 (FAIL). NH-yellow is NEVER
+     text-on-background. It is only ever a FILL carrying tar-black text
+     (9.91:1 PASS) — exactly how a real kilometre stone is painted.
+   ========================================================================== */
+
+/* ─────────────────────────── 1 · PRIMITIVE ─────────────────────────────── */
+:root {
+  /* Limestone — the stone body */
+  --p-limestone-50:  oklch(0.9850 0.0060 87.00);
+  --p-limestone-100: oklch(0.9585 0.0098 87.47); /* #F4F1EA  base */
+  --p-limestone-200: oklch(0.9200 0.0130 87.00);
+  --p-limestone-300: oklch(0.8681 0.0188 86.15); /* #D9D3C6 */
+  --p-limestone-400: oklch(0.7800 0.0200 86.00);
+
+  /* NH-yellow — the painted band (FILL ONLY, never text on light bg) */
+  --p-nh-yellow-300: oklch(0.8800 0.1150 84.00);
+  --p-nh-yellow-400: oklch(0.8325 0.1471 84.01); /* #F5BF45  night band */
+  --p-nh-yellow-500: oklch(0.7986 0.1594 80.23); /* #F2B01E  day band  */
+  --p-nh-yellow-700: oklch(0.6800 0.1450 78.00);
+
+  /* Highway-green — the route line, the "go" */
+  --p-highway-300: oklch(0.7400 0.1150 156.00);
+  --p-highway-500: oklch(0.6531 0.1289 155.95); /* #3FA76E  night route */
+  --p-highway-700: oklch(0.4527 0.0992 157.02); /* #14663F  day route   */
+  --p-highway-900: oklch(0.3200 0.0700 157.00);
+
+  /* Tar — asphalt, ink, and the night itself */
+  --p-tar-600: oklch(0.3600 0.0140 62.00);
+  --p-tar-700: oklch(0.2653 0.0128 62.04); /* #2A241F */
+  --p-tar-800: oklch(0.1994 0.0088 59.12); /* #191512 */
+  --p-tar-900: oklch(0.1772 0.0079 48.26); /* #14100E  ink */
+  --p-tar-950: oklch(0.1564 0.0040 48.45); /* #0E0C0B  night ground */
+
+  /* KM-red — the distance numeral, alerts, the marker head */
+  --p-km-red-400: oklch(0.6621 0.1689 24.91); /* #E8615C  night */
+  --p-km-red-600: oklch(0.5293 0.1892 24.97); /* #C1272D  day   */
+  --p-km-red-700: oklch(0.4600 0.1700 25.00);
+
+  /* ── Non-colour primitives ── */
+  --p-space-1: 0.25rem;  --p-space-2: 0.5rem;   --p-space-3: 0.75rem;
+  --p-space-4: 1rem;     --p-space-5: 1.5rem;   --p-space-6: 2rem;
+  --p-space-7: 3rem;     --p-space-8: 4rem;     --p-space-9: 6rem;
+
+  --p-radius-none: 0;    --p-radius-sm: 2px;    --p-radius-md: 4px;
+  --p-radius-lg: 8px;    --p-radius-pill: 999px;
+
+  --p-font-display: "Teko", "Anek Devanagari", system-ui, sans-serif;
+  --p-font-body:    "Anek Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --p-font-edito:   "Eczar", Georgia, serif;
+
+  /* Easing curves transcribed from the skill's GSAP presets */
+  --p-ease-power1-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --p-ease-power2-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --p-ease-expo-out:   cubic-bezier(0.19, 1, 0.22, 1);
+  --p-ease-back-out:   cubic-bezier(0.34, 1.56, 0.64, 1);
+  --p-ease-inout:      cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ─────────────────────────── 2 · SEMANTIC ──────────────────────────────── */
+/* DAY — full sun, read at a petrol pump. */
+:root {
+  --color-background:        var(--p-limestone-100);
+  --color-surface:           var(--p-limestone-50);
+  --color-surface-sunken:    var(--p-limestone-200);
+  --color-foreground:        var(--p-tar-900);   /* 16.77:1 ✓ */
+  --color-muted-foreground:  var(--p-tar-600);   /*  7.4:1  ✓ */
+  --color-border:            var(--p-limestone-300);
+  --color-border-strong:     var(--p-tar-700);
+
+  --color-primary:           var(--p-highway-700); /* 6.20:1 ✓ */
+  --color-on-primary:        var(--p-limestone-100);
+  --color-route:             var(--p-highway-700);
+  --color-route-travelled:   var(--p-tar-600);
+
+  /* Band = fill only; text on it must be --color-on-band. */
+  --color-band:              var(--p-nh-yellow-500);
+  --color-on-band:           var(--p-tar-900);     /* 9.91:1 ✓ */
+
+  --color-marker:            var(--p-km-red-600);  /* 5.18:1 ✓ */
+  --color-on-marker:         var(--p-limestone-50);
+  --color-destructive:       var(--p-km-red-600);
+  --color-on-destructive:    var(--p-limestone-50);
+
+  --color-ring:              var(--p-highway-700);
+  --color-shadow:            oklch(0.1772 0.0079 48.26 / 0.14);
+
+  /* Agent state semantics (planning screen) */
+  --color-agent-idle:    var(--p-limestone-400);
+  --color-agent-running: var(--p-nh-yellow-500);
+  --color-agent-done:    var(--p-highway-700);
+  --color-agent-failed:  var(--p-km-red-600);
+
+  /* Type scale */
+  --text-milestone: 700 clamp(3rem, 11vw, 7.5rem)/0.86 var(--p-font-display);
+  --text-display:   600 clamp(2.25rem, 6vw, 4rem)/0.95 var(--p-font-display);
+  --text-title:     600 clamp(1.5rem, 3vw, 2.25rem)/1.1 var(--p-font-display);
+  --text-heading:   600 1.25rem/1.3 var(--p-font-body);
+  --text-body:      400 1rem/1.55 var(--p-font-body);
+  --text-small:     400 0.875rem/1.5 var(--p-font-body);
+  --text-label:     500 0.75rem/1.4 var(--p-font-body);
+  --tracking-sign:  0.14em;   /* stencilled signage caps */
+
+  /* Motion — durations lifted from GSAP presets 1/5/7/10/15 */
+  --dur-hover: 180ms;
+  --dur-page: 250ms;
+  --dur-stagger-item: 300ms;
+  --dur-reveal: 500ms;
+  --dur-skeleton: 1400ms;
+  --dur-route-draw: 1600ms;
+  --stagger-step: 60ms;
+}
+
+/* NIGHT DRIVE — not an inversion. Instrument-cluster logic: the ground goes
+   to tar, and the retroreflective band + route line light up like headlights
+   hitting a sign. Every value re-verified against AA on #0E0C0B. */
+.dark {
+  --color-background:        var(--p-tar-950);
+  --color-surface:           var(--p-tar-800);
+  --color-surface-sunken:    var(--p-tar-900);
+  --color-foreground:        var(--p-limestone-300); /* 13.09:1 ✓ */
+  --color-muted-foreground:  oklch(0.7000 0.0180 86.00);
+  --color-border:            var(--p-tar-700);
+  --color-border-strong:     var(--p-tar-600);
+
+  --color-primary:           var(--p-highway-500);   /* 6.47:1 ✓ */
+  --color-on-primary:        var(--p-tar-950);
+  --color-route:             var(--p-highway-500);
+  --color-route-travelled:   var(--p-tar-600);
+
+  --color-band:              var(--p-nh-yellow-400); /* 11.54:1 ✓ retroreflective */
+  --color-on-band:           var(--p-tar-900);       /* 11.19:1 ✓ band rule holds */
+
+  --color-marker:            var(--p-km-red-400);    /* 5.85:1 ✓ (600 would fail) */
+  --color-on-marker:         var(--p-tar-950);
+  --color-destructive:       var(--p-km-red-400);
+  --color-on-destructive:    var(--p-tar-950);
+
+  --color-ring:              var(--p-highway-500);
+  --color-shadow:            oklch(0 0 0 / 0.5);
+
+  --color-agent-idle:    var(--p-tar-600);
+  --color-agent-running: var(--p-nh-yellow-400);
+  --color-agent-done:    var(--p-highway-500);
+  --color-agent-failed:  var(--p-km-red-400);
+}
+
+/* ─────────────────────────── 3 · COMPONENT ─────────────────────────────── */
+:root {
+  /* Touch: every interactive control ≥44px (UX rule: Touch & Interaction) */
+  --control-min: 44px;
+
+  --btn-height: var(--control-min);
+  --btn-height-sm: 36px;
+  --btn-padding-x: var(--p-space-5);
+  --btn-radius: var(--p-radius-md);
+  --btn-font: 500 0.9375rem/1 var(--p-font-body);
+
+  --card-bg: var(--color-surface);
+  --card-border: 1px solid var(--color-border);
+  --card-radius: var(--p-radius-lg);
+  --card-padding: var(--p-space-5);
+  --card-shadow: 0 1px 2px var(--color-shadow);
+  --card-shadow-raised: 0 6px 20px var(--color-shadow);
+
+  /* The milestone marker — proportions of a real NH stone */
+  --milestone-w: 72px;
+  --milestone-h: 92px;
+  --milestone-band-h: 34%;          /* painted cap */
+  --milestone-radius: 36px 36px 3px 3px;
+  --milestone-border: 2px solid var(--color-border-strong);
+
+  --input-height: var(--control-min);
+  --input-bg: var(--color-surface);
+  --input-border: 1px solid var(--color-border-strong);
+  --input-radius: var(--p-radius-md);
+
+  --focus-ring: 2px solid var(--color-ring);
+  --focus-offset: 2px;
+
+  --route-stroke: 4px;
+  --route-stroke-active: 6px;
+  --route-dash: 10 8;
+
+  --timeline-rail-w: 2px;
+  --timeline-node: 18px;
+  --timeline-gutter: 56px;
+
+  --agent-row-h: 56px;
+  --sheet-radius: 16px 16px 0 0;
+}
+
+/* ── Tailwind v4 bridge (shadcn stack rule: @theme inline, never raw hex) ── */
+@theme inline {
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-foreground: var(--color-foreground);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-primary: var(--color-primary);
+  --color-on-primary: var(--color-on-primary);
+  --color-route: var(--color-route);
+  --color-band: var(--color-band);
+  --color-on-band: var(--color-on-band);
+  --color-marker: var(--color-marker);
+  --color-on-marker: var(--color-on-marker);
+  --color-destructive: var(--color-destructive);
+  --color-ring: var(--color-ring);
+  --color-agent-idle: var(--color-agent-idle);
+  --color-agent-running: var(--color-agent-running);
+  --color-agent-done: var(--color-agent-done);
+  --color-agent-failed: var(--color-agent-failed);
+
+  --font-display: var(--p-font-display);
+  --font-body: var(--p-font-body);
+  --font-edito: var(--p-font-edito);
+
+  --radius-sm: var(--p-radius-sm);
+  --radius-md: var(--p-radius-md);
+  --radius-lg: var(--p-radius-lg);
+}
+
+/* Motion accessibility — a global, non-negotiable floor.
+   GSAP preset notes require: pause offscreen, and render final state. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

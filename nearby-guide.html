@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rahgir — Nearby Guide (LLM)</title>
+<style>
+  :root {
+    --ink: #1a2e35;
+    --paper: #f6f3ec;
+    --milestone: #e8dcc4;
+    --route: #c85a2e;
+    --route-deep: #9c3f1c;
+    --sign: #2c5f5a;
+    --sign-light: #3d7d76;
+    --dust: #b8a888;
+    --line: #d8cdb8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.55;
+    padding: 24px 16px 60px;
+    background-image: radial-gradient(circle at 1px 1px, rgba(184,168,136,0.15) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 8px; }
+  .kicker {
+    font-family: 'Courier New', monospace;
+    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--route); margin-bottom: 10px;
+  }
+  h1 { font-size: 42px; font-weight: 400; letter-spacing: -1px; color: var(--ink); }
+  h1 .devanagari { display: block; font-size: 20px; color: var(--sign); letter-spacing: 2px; margin-top: 2px; }
+  .tagline { font-style: italic; color: var(--dust); font-size: 15px; margin-top: 8px; }
+
+  .milestone {
+    width: 46px; height: 58px; margin: 22px auto;
+    background: var(--milestone); border-radius: 6px 6px 0 0;
+    border: 2px solid var(--dust); position: relative;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.05);
+  }
+  .milestone::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0;
+    height: 22px; background: var(--sign); border-radius: 4px 4px 0 0;
+  }
+  .milestone::after {
+    content: "0"; position: absolute; bottom: 8px; left: 0; right: 0;
+    text-align: center; font-family: 'Courier New', monospace;
+    font-size: 13px; color: var(--sign);
+  }
+
+  .panel {
+    background: #fffdf8; border: 1px solid var(--line);
+    border-radius: 4px; padding: 22px; margin-bottom: 20px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+  }
+
+  label.field-label {
+    display: block; font-family: 'Courier New', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--sign); margin-bottom: 6px;
+  }
+  input[type="text"], input[type="number"], input[type="password"], select {
+    width: 100%; padding: 11px 12px; border: 1px solid var(--line);
+    border-radius: 3px; font-family: 'Georgia', serif; font-size: 16px;
+    background: var(--paper); color: var(--ink);
+  }
+  input:focus, select:focus { outline: 2px solid var(--sign-light); outline-offset: 1px; }
+  .row { display: flex; gap: 12px; margin-bottom: 16px; }
+  .row > div { flex: 1; }
+  .field { margin-bottom: 16px; }
+
+  .hint { font-size: 12px; color: var(--dust); margin-top: 5px; font-style: italic; }
+  .hint a { color: var(--route); }
+
+  button.go {
+    width: 100%; padding: 14px; background: var(--route); color: #fff;
+    border: none; border-radius: 3px; font-family: 'Courier New', monospace;
+    font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer; transition: background 0.15s;
+  }
+  button.go:hover { background: var(--route-deep); }
+  button.go:disabled { background: var(--dust); cursor: wait; }
+
+  .status { text-align: center; font-style: italic; color: var(--dust); padding: 16px; font-size: 15px; }
+  .status.error { color: var(--route-deep); font-style: normal; }
+
+  .results-head {
+    font-family: 'Courier New', monospace; font-size: 12px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--sign); margin: 4px 0 14px;
+    padding-bottom: 8px; border-bottom: 1px dashed var(--line);
+  }
+
+  /* LLM guide output */
+  .guide h2 { font-size: 24px; font-weight: 400; margin: 22px 0 4px; color: var(--ink); }
+  .guide h3 {
+    font-size: 19px; font-weight: 400; margin: 20px 0 2px; color: var(--sign);
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .guide h3 .dist-tag {
+    font-family: 'Courier New', monospace; font-size: 11px; color: #fff;
+    background: var(--sign); padding: 3px 7px; border-radius: 2px;
+  }
+  .guide .kind {
+    font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 1px;
+    color: var(--route); text-transform: uppercase;
+  }
+  .guide p { margin: 6px 0 4px; }
+  .guide ul { margin: 6px 0 10px 20px; }
+  .guide li { margin: 3px 0; }
+  .guide strong { color: var(--route-deep); }
+  .guide hr { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
+  .guide a { color: var(--sign-light); }
+
+  .cursor { display:inline-block; width:8px; background:var(--route); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  details.raw { margin-top: 20px; font-size: 13px; }
+  details.raw summary { cursor: pointer; color: var(--dust); font-family: 'Courier New', monospace; }
+  details.raw pre {
+    white-space: pre-wrap; background: var(--paper); border: 1px solid var(--line);
+    padding: 12px; border-radius: 3px; margin-top: 8px; font-size: 12px; overflow-x: auto;
+  }
+
+  footer {
+    text-align: center; font-size: 12px; color: var(--dust); margin-top: 30px;
+    font-family: 'Courier New', monospace; letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Milestone 1 · AI Nearby Guide</div>
+    <h1>Rahgir<span class="devanagari">राहगीर</span></h1>
+    <div class="tagline">"Tell me what's worth stopping for, near here."</div>
+  </header>
+
+  <div class="milestone"></div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <label class="field-label" for="otmKey">OpenTripMap API Key</label>
+        <input type="password" id="otmKey" placeholder="OpenTripMap key" autocomplete="off">
+      </div>
+      <div>
+        <label class="field-label" for="orKey">OpenRouter API Key</label>
+        <input type="password" id="orKey" placeholder="sk-or-..." autocomplete="off">
+      </div>
+    </div>
+    <div class="hint">
+      OpenTripMap key: <a href="https://opentripmap.io/product" target="_blank" rel="noopener">opentripmap.io/product</a> ·
+      OpenRouter key: <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.
+      Both stay only in this browser tab.
+    </div>
+
+    <div class="field" style="margin-top:16px;">
+      <label class="field-label" for="model">LLM Model (OpenRouter)</label>
+      <select id="model">
+        <option value="google/gemini-2.0-flash-001">google/gemini-2.0-flash-001 (fast, cheap)</option>
+        <option value="anthropic/claude-3.5-haiku">anthropic/claude-3.5-haiku</option>
+        <option value="openai/gpt-4o-mini">openai/gpt-4o-mini</option>
+        <option value="meta-llama/llama-3.3-70b-instruct">meta-llama/llama-3.3-70b-instruct</option>
+        <option value="deepseek/deepseek-chat">deepseek/deepseek-chat</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="place">Place name</label>
+      <input type="text" id="place" placeholder="e.g. Mathura, Firozabad, Etawah" value="Mathura">
+      <div class="hint">Any town or city — we geocode it, look around it, then let the LLM write the guide.</div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label class="field-label" for="radius">Radius (km)</label>
+        <input type="number" id="radius" value="10" min="1" max="50">
+      </div>
+      <div>
+        <label class="field-label" for="limit">Max places</label>
+        <input type="number" id="limit" value="12" min="1" max="30">
+      </div>
+    </div>
+
+    <button class="go" id="go">Build My Nearby Guide</button>
+  </div>
+
+  <div id="status"></div>
+  <div class="panel" id="results" style="display:none;"></div>
+
+  <footer>Rahgir prototype · OpenTripMap POIs + OpenRouter LLM</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const OTM = "https://api.opentripmap.com/0.1/en/places";
+const OR  = "https://openrouter.ai/api/v1/chat/completions";
+
+$('go').addEventListener('click', run);
+$('place').addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+
+function setStatus(msg, isError) {
+  const s = $('status');
+  s.textContent = msg;
+  s.className = 'status' + (isError ? ' error' : '');
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371, toR = d => d * Math.PI / 180;
+  const dLat = toR(lat2 - lat1), dLon = toR(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toR(lat1))*Math.cos(toR(lat2))*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function prettyKind(kinds) {
+  if (!kinds) return 'place';
+  const map = {
+    religion: 'Temple / Shrine', historic: 'Heritage', architecture: 'Architecture',
+    cultural: 'Cultural', natural: 'Nature', museums: 'Museum',
+    fortifications: 'Fort', monuments: 'Monument', gardens: 'Garden'
+  };
+  for (const k of kinds.split(',')) if (map[k]) return map[k];
+  return kinds.split(',')[0].replace(/_/g, ' ');
+}
+
+async function run() {
+  const otmKey = $('otmKey').value.trim();
+  const orKey  = $('orKey').value.trim();
+  const model  = $('model').value;
+  const place  = $('place').value.trim();
+  const radiusKm = parseFloat($('radius').value) || 10;
+  const limit  = parseInt($('limit').value) || 12;
+
+  $('results').style.display = 'none';
+  if (!otmKey) { setStatus('Enter your OpenTripMap API key.', true); return; }
+  if (!orKey)  { setStatus('Enter your OpenRouter API key.', true); return; }
+  if (!place)  { setStatus('Enter a place name.', true); return; }
+
+  $('go').disabled = true;
+
+  try {
+    // 1. Geocode
+    setStatus('Finding ' + place + ' on the map…');
+    const geoRes = await fetch(`${OTM}/geoname?name=${encodeURIComponent(place)}&apikey=${otmKey}`);
+    if (!geoRes.ok) throw new Error('Geocoding failed (HTTP ' + geoRes.status + '). Check your OpenTripMap key.');
+    const geo = await geoRes.json();
+    if (!geo.lat || !geo.lon) throw new Error('Could not locate "' + place + '". Try a nearby bigger town.');
+
+    // 2. POIs by radius
+    setStatus(`Looking within ${radiusKm} km of ${geo.name || place}…`);
+    const listRes = await fetch(`${OTM}/radius?radius=${radiusKm*1000}&lon=${geo.lon}&lat=${geo.lat}`
+                              + `&rate=2&format=json&limit=${limit}&apikey=${otmKey}`);
+    if (!listRes.ok) throw new Error('Place search failed (HTTP ' + listRes.status + ').');
+    let places = await listRes.json();
+    places = places
+      .filter(p => p.name)
+      .map(p => ({ ...p, dist: haversine(geo.lat, geo.lon, p.point.lat, p.point.lon) }))
+      .sort((a, b) => a.dist - b.dist);
+
+    if (!places.length) {
+      setStatus('No named places found here. Try a bigger radius or a nearby city.', true);
+      $('go').disabled = false;
+      return;
+    }
+
+    // 3. Optional enrichment: pull short xid detail for the top few (kept small to save quota)
+    setStatus(`Found ${places.length} places. Gathering a few extra details…`);
+    const topN = Math.min(places.length, 6);
+    await Promise.all(places.slice(0, topN).map(async p => {
+      if (!p.xid) return;
+      try {
+        const dRes = await fetch(`${OTM}/xid/${p.xid}?apikey=${otmKey}`);
+        if (dRes.ok) {
+          const d = await dRes.json();
+          p.info = (d.wikipedia_extracts && d.wikipedia_extracts.text) || (d.info && d.info.descr) || '';
+          p.address = d.address || null;
+        }
+      } catch (_) {}
+    }));
+
+    // 4. Ask the LLM to write the guide
+    setStatus('Asking the LLM to write your guide…');
+    renderGuideShell(places, geo, radiusKm);
+    await streamGuide({ orKey, model, place: geo.name || place, radiusKm, places });
+    setStatus('');
+  } catch (err) {
+    setStatus(err.message, true);
+  } finally {
+    $('go').disabled = false;
+  }
+}
+
+function buildPrompt(place, radiusKm, places) {
+  const lines = places.map((p, i) => {
+    const parts = [`${i+1}. ${p.name}`];
+    parts.push(`(${prettyKind(p.kinds)}, ~${p.dist.toFixed(1)} km away)`);
+    if (p.address && p.address.city) parts.push(`city: ${p.address.city}`);
+    if (p.info) parts.push(`— ${p.info.slice(0, 300)}`);
+    return parts.join(' ');
+  }).join('\n');
+
+  return `You are Rahgir, a warm, knowledgeable Indian travel companion.
+A traveller is near "${place}". Here are real points of interest within ${radiusKm} km, from OpenTripMap:
+
+${lines}
+
+Write a friendly nearby guide in Markdown. For EACH place above, output:
+- A "### {name}" heading.
+- 2-4 sentences: what it is, why it's worth stopping for, and any practical tip (best time, what to see, rough visit duration).
+Only use the places listed. Do not invent places not in the list. If a place is obscure and you are unsure, say so honestly rather than making up facts. Start with a one-line intro. Keep the whole thing tight and useful.`;
+}
+
+function renderGuideShell(places, geo, radiusKm) {
+  const box = $('results');
+  box.innerHTML =
+    `<div class="results-head">${places.length} places within ${radiusKm} km of ${geo.name || 'centre'} · guide by LLM</div>`
+    + `<div class="guide" id="guide"><span class="cursor">&nbsp;</span></div>`
+    + `<details class="raw"><summary>raw OpenTripMap data (${places.length} places)</summary><pre>`
+    + places.map(p => `${p.name} · ${prettyKind(p.kinds)} · ${p.dist.toFixed(1)} km${p.info ? '\n   ' + p.info.slice(0,160) : ''}`).join('\n')
+    + `</pre></details>`;
+  box.style.display = 'block';
+}
+
+// Minimal, safe-enough Markdown -> HTML for the guide output.
+function mdToHtml(md) {
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const lines = md.split('\n');
+  let html = '', inList = false;
+  const inline = t => esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+  for (let raw of lines) {
+    const line = raw.trimEnd();
+    if (/^###\s+/.test(line)) { closeList(); html += `<h3>${inline(line.replace(/^###\s+/,''))}</h3>`; }
+    else if (/^##\s+/.test(line)) { closeList(); html += `<h2>${inline(line.replace(/^##\s+/,''))}</h2>`; }
+    else if (/^[-*]\s+/.test(line)) { if (!inList) { html += '<ul>'; inList = true; } html += `<li>${inline(line.replace(/^[-*]\s+/,''))}</li>`; }
+    else if (line === '') { closeList(); }
+    else { closeList(); html += `<p>${inline(line)}</p>`; }
+  }
+  closeList();
+  return html;
+}
+
+async function streamGuide({ orKey, model, place, radiusKm, places }) {
+  const guide = $('guide');
+  const res = await fetch(OR, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + orKey,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': location.href,
+      'X-Title': 'Rahgir Nearby Guide'
+    },
+    body: JSON.stringify({
+      model,
+      stream: true,
+      messages: [
+        { role: 'system', content: 'You are Rahgir, a concise, factual Indian travel companion. Never invent places.' },
+        { role: 'user', content: buildPrompt(place, radiusKm, places) }
+      ]
+    })
+  });
+
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error('OpenRouter error (HTTP ' + res.status + '). ' + t.slice(0, 200));
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '', full = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const parts = buf.split('\n');
+    buf = parts.pop();
+    for (const line of parts) {
+      const t = line.trim();
+      if (!t.startsWith('data:')) continue;
+      const data = t.slice(5).trim();
+      if (data === '[DONE]') continue;
+      try {
+        const json = JSON.parse(data);
+        const delta = json.choices?.[0]?.delta?.content || '';
+        if (delta) {
+          full += delta;
+          guide.innerHTML = mdToHtml(full) + '<span class="cursor">&nbsp;</span>';
+        }
+      } catch (_) {}
+    }
+  }
+  guide.innerHTML = mdToHtml(full);
+}
+</script>
+</body>
+</html>

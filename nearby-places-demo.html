@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rahgir — Nearby Places Demo</title>
+<style>
+  :root {
+    --ink: #1a2e35;
+    --paper: #f6f3ec;
+    --milestone: #e8dcc4;
+    --route: #c85a2e;
+    --route-deep: #9c3f1c;
+    --sign: #2c5f5a;
+    --sign-light: #3d7d76;
+    --dust: #b8a888;
+    --line: #d8cdb8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 24px 16px 60px;
+    background-image: radial-gradient(circle at 1px 1px, rgba(184,168,136,0.15) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 8px; }
+  .kicker {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--route);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 42px;
+    font-weight: 400;
+    letter-spacing: -1px;
+    color: var(--ink);
+  }
+  h1 .devanagari { display: block; font-size: 20px; color: var(--sign); letter-spacing: 2px; margin-top: 2px; }
+  .tagline {
+    font-style: italic;
+    color: var(--dust);
+    font-size: 15px;
+    margin-top: 8px;
+  }
+
+  /* milestone divider */
+  .milestone {
+    width: 46px; height: 58px;
+    margin: 22px auto;
+    background: var(--milestone);
+    border-radius: 6px 6px 0 0;
+    border: 2px solid var(--dust);
+    position: relative;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.05);
+  }
+  .milestone::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 22px; background: var(--sign);
+    border-radius: 4px 4px 0 0;
+  }
+  .milestone::after {
+    content: "0";
+    position: absolute; bottom: 8px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 13px; color: var(--sign);
+  }
+
+  .panel {
+    background: #fffdf8;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+  }
+
+  label.field-label {
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sign);
+    margin-bottom: 6px;
+  }
+  input[type="text"], input[type="number"], input[type="password"] {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    font-family: 'Georgia', serif;
+    font-size: 16px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  input:focus { outline: 2px solid var(--sign-light); outline-offset: 1px; }
+  .row { display: flex; gap: 12px; margin-bottom: 16px; }
+  .row > div { flex: 1; }
+  .field { margin-bottom: 16px; }
+
+  .hint { font-size: 12px; color: var(--dust); margin-top: 5px; font-style: italic; }
+  .hint a { color: var(--route); }
+
+  button.go {
+    width: 100%;
+    padding: 14px;
+    background: var(--route);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button.go:hover { background: var(--route-deep); }
+  button.go:disabled { background: var(--dust); cursor: wait; }
+
+  .status {
+    text-align: center;
+    font-style: italic;
+    color: var(--dust);
+    padding: 16px;
+    font-size: 15px;
+  }
+  .status.error { color: var(--route-deep); font-style: normal; }
+
+  /* results as signboard cards */
+  .results-head {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sign);
+    margin: 8px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .place {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: baseline;
+  }
+  .place:last-child { border-bottom: none; }
+  .dist-tag {
+    flex-shrink: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #fff;
+    background: var(--sign);
+    padding: 4px 8px;
+    border-radius: 2px;
+    min-width: 62px;
+    text-align: center;
+  }
+  .place-body h3 { font-size: 18px; font-weight: 400; margin-bottom: 2px; }
+  .kind {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--route);
+    text-transform: uppercase;
+  }
+  .place-link { font-size: 13px; color: var(--sign-light); text-decoration: none; }
+  .place-link:hover { text-decoration: underline; }
+
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--dust);
+    margin-top: 30px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Milestone 0 · POI Probe</div>
+    <h1>Rahgir<span class="devanagari">राहगीर</span></h1>
+    <div class="tagline">"What's worth stopping for, near here?"</div>
+  </header>
+
+  <div class="milestone"></div>
+
+  <div class="panel">
+    <div class="field">
+      <label class="field-label" for="key">OpenTripMap API Key</label>
+      <input type="password" id="key" placeholder="paste your free key here" autocomplete="off">
+      <div class="hint">Free key from <a href="https://opentripmap.io/product" target="_blank" rel="noopener">opentripmap.io/product</a> — sign up, copy the key, paste above. Kept only in this page.</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="place">Place name</label>
+      <input type="text" id="place" placeholder="e.g. Etawah, Firozabad, Mathura" value="Firozabad">
+      <div class="hint">Any Indian town or city. We geocode it, then look around it.</div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label class="field-label" for="radius">Radius (km)</label>
+        <input type="number" id="radius" value="10" min="1" max="50">
+      </div>
+      <div>
+        <label class="field-label" for="limit">Max results</label>
+        <input type="number" id="limit" value="15" min="1" max="50">
+      </div>
+    </div>
+
+    <button class="go" id="go">Find Nearby Places</button>
+  </div>
+
+  <div id="status"></div>
+  <div class="panel" id="results" style="display:none;"></div>
+
+  <footer>Demo · OpenTripMap · Rahgir route-assistant prototype</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const BASE = "https://api.opentripmap.com/0.1/en/places";
+
+$('go').addEventListener('click', run);
+$('place').addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+
+function setStatus(msg, isError) {
+  const s = $('status');
+  s.textContent = msg;
+  s.className = 'status' + (isError ? ' error' : '');
+}
+
+async function run() {
+  const key = $('key').value.trim();
+  const place = $('place').value.trim();
+  const radiusKm = parseFloat($('radius').value) || 10;
+  const limit = parseInt($('limit').value) || 15;
+
+  $('results').style.display = 'none';
+  if (!key) { setStatus('Enter your OpenTripMap API key first.', true); return; }
+  if (!place) { setStatus('Enter a place name.', true); return; }
+
+  $('go').disabled = true;
+  setStatus('Finding ' + place + ' on the map…');
+
+  try {
+    // 1. Geocode the place name to coordinates
+    const geoUrl = `${BASE}/geoname?name=${encodeURIComponent(place)}&country=IN&apikey=${key}`;
+    const geoRes = await fetch(geoUrl);
+    if (!geoRes.ok) throw new Error('Geocoding failed (HTTP ' + geoRes.status + '). Check your API key.');
+    const geo = await geoRes.json();
+    if (!geo.lat || !geo.lon) throw new Error('Could not locate "' + place + '". Try a nearby bigger town.');
+
+    setStatus(`Looking within ${radiusKm} km of ${geo.name || place}…`);
+
+    // 2. Search POIs in radius, sorted by importance ("rate")
+    const radiusM = radiusKm * 1000;
+    const listUrl = `${BASE}/radius?radius=${radiusM}&lon=${geo.lon}&lat=${geo.lat}`
+                  + `&rate=2&format=json&limit=${limit}&apikey=${key}`;
+    const listRes = await fetch(listUrl);
+    if (!listRes.ok) throw new Error('Place search failed (HTTP ' + listRes.status + ').');
+    const places = await listRes.json();
+
+    if (!places.length) {
+      setStatus('No rated places found here. Try a bigger radius or a nearby city — sparse data is common for smaller towns.', true);
+      $('go').disabled = false;
+      return;
+    }
+
+    render(places, geo, radiusKm);
+    setStatus('');
+  } catch (err) {
+    setStatus(err.message, true);
+  } finally {
+    $('go').disabled = false;
+  }
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371, toR = d => d * Math.PI / 180;
+  const dLat = toR(lat2 - lat1), dLon = toR(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toR(lat1))*Math.cos(toR(lat2))*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function prettyKind(kinds) {
+  if (!kinds) return 'place';
+  const map = {
+    religion: 'Temple / Shrine', historic: 'Heritage', architecture: 'Architecture',
+    cultural: 'Cultural', natural: 'Nature', museums: 'Museum',
+    fortifications: 'Fort', monuments: 'Monument', gardens: 'Garden'
+  };
+  for (const k of kinds.split(',')) if (map[k]) return map[k];
+  return kinds.split(',')[0].replace(/_/g, ' ');
+}
+
+function render(places, geo, radiusKm) {
+  const box = $('results');
+  const withDist = places.map(p => ({
+    ...p,
+    dist: haversine(geo.lat, geo.lon, p.point.lat, p.point.lon)
+  })).sort((a, b) => a.dist - b.dist);
+
+  let html = `<div class="results-head">${withDist.length} places within ${radiusKm} km of ${geo.name || 'centre'}</div>`;
+  for (const p of withDist) {
+    const name = p.name || '(unnamed spot)';
+    const wiki = p.wikidata
+      ? `https://www.wikidata.org/wiki/${p.wikidata}`
+      : `https://www.google.com/search?q=${encodeURIComponent(name)}`;
+    html += `
+      <div class="place">
+        <div class="dist-tag">${p.dist.toFixed(1)} km</div>
+        <div class="place-body">
+          <h3>${name}</h3>
+          <span class="kind">${prettyKind(p.kinds)}</span> &nbsp;·&nbsp;
+          <a class="place-link" href="${wiki}" target="_blank" rel="noopener">look up ↗</a>
+        </div>
+      </div>`;
+  }
+  box.innerHTML = html;
+  box.style.display = 'block';
+}
+</script>
+</body>
+</html>

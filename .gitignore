@@ -1,0 +1,21 @@
+.rocketride/
+
+# Local environment and machine-specific files
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+
+# Logs and test caches
+*.log
+.pytest_cache/
